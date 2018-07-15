@@ -23,7 +23,9 @@ import shapely
 #See https://github.com/Toblerity/Shapely
 from shapely.ops import transform
 
-#import arcpy
+##import arcpy
+##from arcpy.sa import *
+
 #This module is not open source (ArcGIS), but can be left away if rasters are not generated
 
 
@@ -60,6 +62,39 @@ def generatedistraster(listofbbgvalues=[40,42], name="parks"):
         print arcpy.GetMessages()
     return distrast+'.tif'
 
+"""generates raster that captures the coverage of a landuse class in a neighborhood around each cell"""
+def generateCoverageRaster(name="parks"):
+    arcpy.env.overwriteOutput = True #Such that files can be overwritten
+    arcpy.env.workspace = r"C:\\Users\\schei008\\Documents\\Github\\gps\\distrast" #Setting the workspace
+    if arcpy.CheckExtension("Spatial") == "Available": #Check out spatial analyst extension
+        arcpy.CheckOutExtension("Spatial")
+    distrast = os.path.join(r"C:\\Users\\schei008\\Documents\\Github\\gps\\distrast","dist2"+name)
+    reclrast  = os.path.join(r"C:\\Users\\schei008\\Documents\\Github\\gps\\distrast","in2"+name)
+    covrast = os.path.join(arcpy.env.workspace,"covOf"+name)
+
+    #Turns cells within landuse region into 1, and all other into 0
+    recl = arcpy.sa.Reclassify(distrast+'.tif', "VALUE", arcpy.sa.RemapValue([[0,1]]), "NODATA")
+    recl2 = Con(IsNull(recl), 0, recl)
+
+    recl2.save(reclrast)
+    arcpy.Delete_management(recl)
+
+    #Generates the number (= percentage) of landuse rasters within a focal window (of 1 km * 1km) around each cell
+    outfocal = arcpy.sa.FocalStatistics(reclrast,arcpy.sa.NbrRectangle(10,10,"CELL"), "SUM")
+    outfocal.save(covrast)
+    try:
+        arcpy.RasterToOtherFormat_conversion(covrast,arcpy.env.workspace,"TIFF")
+        arcpy.Delete_management(covrast)
+        arcpy.Delete_management(reclrast)
+        arcpy.Delete_management(outfocal)
+    except:
+        print "Raster To Other Format exsample failed."
+        print arcpy.GetMessages()
+    return covrast+'.tif'
+
+
+
+
 
 
 """A function for looking up Raster cell row/colum projected in RD_new, based on a WGS84 coordinate pair as input as well as a Geo raster tile"""
@@ -79,7 +114,7 @@ def lookupWGS84(x,y,GeoT):
     return row, col
 
 """Enriches a track csv file with distances to landuse categories, both given as input. Writes out a novel csv file. If coordinates are out of bounds, returns NN"""
-def enrichtrack(csvf, categories):
+def enrichtrack(csvf, categories, rastertype='dist2'):
     clist = categories.keys()
     #testpoint = 123907.175,  496407.706
     #print("\n  Mean: {}, Std: {}, max: {}, min: {}".format(str(data.mean()), str(data.std()),str(data.max()),str(data.min())))
@@ -91,7 +126,7 @@ def enrichtrack(csvf, categories):
     #load raster data once
     rasters = []
     for c in clist:
-        rasters.append(gr.load_tiff("distrast\\dist2"+c+".tif"))
+        rasters.append(gr.load_tiff("distrast\\"+rastertype+c+".tif"))
     with open(csvf, 'rb') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='|')
         with open(csvf.split('.')[0]+'en.csv', 'wb') as out:
@@ -124,12 +159,14 @@ def main():
     bbgcategories = {'parks':[40,42], 'agric':[51], 'sports':[41], 'recr': [43,44], 'frst':[60], 'ntr':[61,62], 'wtr':[70,71,72,73,74,75,76,77,78,80,81,82,83], 'trfc':[11]}
     """meaning of BBG 2012 landuse categories: agric (agriculture areas), sports (sports areas) recr (recreation areas),frst (forest areas), ntr (nature areas), wtr (water areas), trfc (traffic areas)"""
     start = time.time()
-##    for name,v in bbgcategories.items():
-##        generatedistraster(v,name)
+    #for name,v in bbgcategories.items():
+        #generatedistraster(v,name)
+        #generateCoverageRaster(name)
     #store distances to these landuse areas for points in some track
-    enrichtrack('GPS.csv',bbgcategories)
+    enrichtrack('GPS.csv',bbgcategories,'covOf')
     end = time.time()
     print("Duration = "+str(end - start))
+
 
 
 
