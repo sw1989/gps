@@ -162,7 +162,7 @@ INTERSECTS = 'intersects'
 TOUCHES = 'touches'
 WITHIN = 'within'
 
-
+#see https://blog.maptiks.com/spatial-queries-in-python/
 def generate_index(records, index_path=None):
     prop = rtree.index.Property()
     if index_path is not None:
