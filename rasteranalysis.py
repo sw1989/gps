@@ -154,14 +154,6 @@ def enrichtrack(csvf, categories, rastertype='dist2'):
     out.close()
 
 
-CONTAINS = 'contains'
-CROSSES = 'crosses'
-DISJOINT = 'disjoint'
-EQUALS = 'equals'
-INTERSECTS = 'intersects'
-TOUCHES = 'touches'
-WITHIN = 'within'
-
 #see https://blog.maptiks.com/spatial-queries-in-python/
 def generate_index(records, index_path=None):
     prop = rtree.index.Property()
@@ -175,13 +167,21 @@ def generate_index(records, index_path=None):
             sp_index.insert(n, shape(ft['geometry']).bounds)
     return sp_index
 
-
-def selectPolygon(point, index, layer):
-    for fid in index.intersection(point.bounds):
+#Selects a polygon in a projected layer based on x y coordinates in WGS84
+def selectPolygonData(x,y, index, layer):
+    p = shapely.geometry.point.Point(x,y)
+    print(str(p))
+    pn = transform(project, p)
+    print(str(pn))
+    for fid in index.intersection(pn.bounds):
+        shp2 = shape(layer[fid]['geometry'])
+        if shp2.contains(pn):
             return layer[fid]
             break
+    return None
 
-def enrichCBSvierkant(csvf):
+def enrichCBS(csvf):
+    layer2 = 'stats\\buurt_2014.shp'
     with fiona.open(layer2) as datasrc2:
         fname, _ = os.path.splitext(layer2)
         if os.path.exists(fname + '.dat') and os.path.exists(fname + '.idx'):
@@ -194,19 +194,17 @@ def enrichCBSvierkant(csvf):
         reader = csv.reader(csvfile, delimiter=',', quotechar='|')
         with open(csvf.split('.')[0]+'en.csv', 'wb') as out:
             writer = csv.writer(out, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            writer.writerow(['Y', 'X']+clist)
+            #writer.writerow(['Y', 'X']+clist)
             for i,line in enumerate(reader):
                 x = float(line[1])
                 y = float(line[0])
-                valuelist =[]
-                row, col = lookupWGS84(x, y, GeoT)
-                if row != 'NN' and (row < rows and col < cols):
-                    for data in rasters:
-                        valuelist.append(str(data[row,col]))
-                    writer.writerow([line[0], line[1]]+valuelist)
+                row = selectPolygonData(x, y, layer2_index, datasrc2)
+                if row != None:
+                    print("row: "+line[0]+" "+ line[1]+" "+str(row))
+                    #writer.writerow([line[0], line[1]]+row)
                 else:
                     print("Coordinates out of bounds!")
-                    writer.writerow([line[0], line[1]]+['NN' for i in clist])
+                    #writer.writerow([line[0], line[1]]+['NN' for i in clist])
                 #if i ==20:
                 #    break
     csvfile.close()
@@ -224,7 +222,8 @@ def main():
         #generatedistraster(v,name)
         #generateCoverageRaster(name)
     #store distances to these landuse areas for points in some track
-    enrichtrack('GPS.csv',bbgcategories,'covOf')
+    #enrichtrack('GPS.csv',bbgcategories,'covOf')
+    enrichCBS('GPS.csv')
     end = time.time()
     print("Duration = "+str(end - start))
 
