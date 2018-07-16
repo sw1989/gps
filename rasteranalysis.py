@@ -22,6 +22,10 @@ import pyproj
 import shapely
 #See https://github.com/Toblerity/Shapely
 from shapely.ops import transform
+from shapely.geometry import shape
+import rtree
+import fiona
+
 
 ##import arcpy
 ##from arcpy.sa import *
@@ -150,6 +154,63 @@ def enrichtrack(csvf, categories, rastertype='dist2'):
     out.close()
 
 
+CONTAINS = 'contains'
+CROSSES = 'crosses'
+DISJOINT = 'disjoint'
+EQUALS = 'equals'
+INTERSECTS = 'intersects'
+TOUCHES = 'touches'
+WITHIN = 'within'
+
+
+def generate_index(records, index_path=None):
+    prop = rtree.index.Property()
+    if index_path is not None:
+        prop.storage = rtree.index.RT_Disk
+        prop.overwrite = index_path
+
+    sp_index = rtree.index.Index(index_path, properties=prop)
+    for n, ft in enumerate(records):
+        if ft['geometry'] is not None:
+            sp_index.insert(n, shape(ft['geometry']).bounds)
+    return sp_index
+
+
+def selectPolygon(point, index, layer):
+    for fid in index.intersection(point.bounds):
+            return layer[fid]
+            break
+
+def enrichCBSvierkant(csvf):
+    with fiona.open(layer2) as datasrc2:
+        fname, _ = os.path.splitext(layer2)
+        if os.path.exists(fname + '.dat') and os.path.exists(fname + '.idx'):
+            layer2_index = rtree.index.Index(fname)
+        else:
+            layer2_index = generate_index(datasrc2, fname)
+
+
+    with open(csvf, 'rb') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+        with open(csvf.split('.')[0]+'en.csv', 'wb') as out:
+            writer = csv.writer(out, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            writer.writerow(['Y', 'X']+clist)
+            for i,line in enumerate(reader):
+                x = float(line[1])
+                y = float(line[0])
+                valuelist =[]
+                row, col = lookupWGS84(x, y, GeoT)
+                if row != 'NN' and (row < rows and col < cols):
+                    for data in rasters:
+                        valuelist.append(str(data[row,col]))
+                    writer.writerow([line[0], line[1]]+valuelist)
+                else:
+                    print("Coordinates out of bounds!")
+                    writer.writerow([line[0], line[1]]+['NN' for i in clist])
+                #if i ==20:
+                #    break
+    csvfile.close()
+    out.close()
 
 
 
