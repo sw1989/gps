@@ -164,7 +164,7 @@ def generate_index(records, index_path=None):
     sp_index = rtree.index.Index(index_path, properties=prop)
     for n, ft in enumerate(records):
         if ft['geometry'] is not None:
-            sp_index.insert(n, shape(ft['geometry']).bounds)
+            sp_index.insert(int(n), shape(ft['geometry']).bounds)
     return sp_index
 
 #Selects a polygon in a projected layer based on x y coordinates in WGS84
@@ -174,13 +174,19 @@ def selectPolygonData(x,y, index, layer):
     pn = transform(project, p)
     print(str(pn))
     for fid in index.intersection(pn.bounds):
-        shp2 = shape(layer[fid]['geometry'])
-        if shp2.contains(pn):
-            return layer[fid]
-            break
+        if fid != None and fid in layer.keys():
+            feat = layer[int(fid)]
+            #print feat
+            shp2 = shape(feat['geometry'])
+            if shp2.intersects(pn):
+                    return feat
+                    break
     return None
 
+
 def enrichCBS(csvf):
+    attributes = ['BEV_DICHTH','P_65_EO_JR','P_EENP_HH', 'P_HH_Z_K','P_N_W_AL']
+    """Population density, percentage people over 65 years, percentage one person households, percentage households without children, percentage non-western immigrants"""
     layer2 = 'stats\\buurt_2014.shp'
     with fiona.open(layer2) as datasrc2:
         fname, _ = os.path.splitext(layer2)
@@ -189,26 +195,26 @@ def enrichCBS(csvf):
         else:
             layer2_index = generate_index(datasrc2, fname)
 
-
-    with open(csvf, 'rb') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',', quotechar='|')
-        with open(csvf.split('.')[0]+'en.csv', 'wb') as out:
-            writer = csv.writer(out, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            #writer.writerow(['Y', 'X']+clist)
-            for i,line in enumerate(reader):
-                x = float(line[1])
-                y = float(line[0])
-                row = selectPolygonData(x, y, layer2_index, datasrc2)
-                if row != None:
-                    print("row: "+line[0]+" "+ line[1]+" "+str(row))
-                    #writer.writerow([line[0], line[1]]+row)
-                else:
-                    print("Coordinates out of bounds!")
-                    #writer.writerow([line[0], line[1]]+['NN' for i in clist])
-                #if i ==20:
-                #    break
-    csvfile.close()
-    out.close()
+        with open(csvf, 'rb') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+            with open(csvf.split('.')[0]+'en.csv', 'wb') as out:
+                writer = csv.writer(out, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                writer.writerow(['Y', 'X']+attributes)
+                for i,line in enumerate(reader):
+                    x = float(line[1])
+                    y = float(line[0])
+                    feat = selectPolygonData(x, y, layer2_index, datasrc2)
+                    if feat != None:
+                        attr = feat['properties']
+                        #print("row: "+line[0]+" "+ line[1]+" "+str(attr['BEV_DICHTH']) )
+                        writer.writerow([line[0], line[1]]+[str(attr[a]) for a in attributes])
+                    else:
+                        print("Coordinates out of bounds!")
+                        writer.writerow([line[0], line[1]]+['NN' for i in attributes])
+                    #if i ==5:
+                    #    break
+        csvfile.close()
+    datasrc2.close()
 
 
 
