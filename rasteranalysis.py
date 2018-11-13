@@ -13,9 +13,12 @@ import numpy as np
 import time
 import os
 import csv
+import pandas
 
 #These geo modules require the installation of GDAL and other libraries. for windows binaries, see https://www.lfd.uci.edu/~gohlke/pythonlibs/
 import georasters as gr
+import geopandas as gp
+import rasterstats
 #see https://github.com/ozak/georasters
 import pyproj
 #see https://github.com/jswhit/pyproj
@@ -217,6 +220,54 @@ def enrichCBS(csvf):
     datasrc2.close()
 
 
+def generateCellStats(categories, rastertype='dist2'):
+
+    clist = categories.keys()
+    #testpoint = 123907.175,  496407.706
+    #print("\n  Mean: {}, Std: {}, max: {}, min: {}".format(str(data.mean()), str(data.std()),str(data.max()),str(data.min())))
+    #load raster data once
+    rasters = []
+    NDV, xsize, ysize, GeoT, Projection, DataType = gr.get_geo_info("distrast\\dist2sports.tif")
+    netherlands = gp.read_file('Netherlands.shp')
+    stats = []
+    import matplotlib.pyplot as plt
+    for c in clist:
+        r =gr.from_file("distrast\\"+rastertype+c+".tif")
+        #df = r.to_pandas().values
+        #print str(r.mean())
+        #print r.projection
+        #r.plot()
+        #plt.show()
+        r = r.clip(netherlands)[0]
+        rf = r.flatten()
+        #np.hist(rf)
+        plt.clf()
+        plt.hist(x=rf, bins=20, color='#0504aa', alpha=0.7, rwidth=0.85)
+        plt.grid(axis='y', alpha=0.75)
+        plt.xlabel(rastertype+c)
+        plt.ylabel('Frequency')
+        plt.title(rastertype+c)
+        #plt.text(23, 45, r'$\mu=15, b=3$')
+        #maxfreq = rf.max()
+        # Set a clean upper y-axis limit.
+        #plt.ylim(ymax=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10)
+        #plt.show()
+
+        plt.savefig('cellstats/'+rastertype+c+'.png')
+
+        df = r.stats(netherlands, stats='percentile_10 percentile_20 percentile_30 percentile_40 percentile_50 percentile_60 percentile_70 percentile_80 percentile_90 percentile_100')
+        df.insert(0, 'cat', rastertype+c)
+        stats.append(df)
+        #print rasterstats.zonal_stats(netherlands,  r, stats="percentile_10 percentile_50 percentile_80")
+
+       # print " median = "+str(df.quantile(0.5))
+    res = pandas.concat(stats).set_index('cat').drop(['GeoRaster','Id'],1)
+    print res
+    res.to_csv('cellstats/'+rastertype+'percentiles.csv')
+
+
+
+
 
 
 
@@ -229,7 +280,8 @@ def main():
         #generateCoverageRaster(name)
     #store distances to these landuse areas for points in some track
     #enrichtrack('GPS.csv',bbgcategories,'covOf')
-    enrichCBS('GPS.csv')
+    #enrichCBS('GPS.csv')
+    generateCellStats(bbgcategories, rastertype='covOf')
     end = time.time()
     print("Duration = "+str(end - start))
 
