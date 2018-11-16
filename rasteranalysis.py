@@ -30,8 +30,8 @@ import rtree
 import fiona
 
 
-##import arcpy
-##from arcpy.sa import *
+#import arcpy
+#from arcpy.sa import *
 
 #This module is not open source (ArcGIS), but can be left away if rasters are not generated
 
@@ -220,29 +220,42 @@ def enrichCBS(csvf):
     datasrc2.close()
 
 
-def generateCellStats(categories, rastertype='dist2'):
+def generateCellStats(categories, rastertype='dist2', sourcefolder= 'distrast'):
 
     clist = categories.keys()
     #testpoint = 123907.175,  496407.706
     #print("\n  Mean: {}, Std: {}, max: {}, min: {}".format(str(data.mean()), str(data.std()),str(data.max()),str(data.min())))
     #load raster data once
     rasters = []
-    NDV, xsize, ysize, GeoT, Projection, DataType = gr.get_geo_info("distrast\\dist2sports.tif")
+    NDV, xsize, ysize, GeoT, Projection, DataType = gr.get_geo_info(sourcefolder+"\\"+rastertype+clist[0]+".tif")
     netherlands = gp.read_file('Netherlands.shp')
     stats = []
     import matplotlib.pyplot as plt
     for c in clist:
-        r =gr.from_file("distrast\\"+rastertype+c+".tif")
-        #df = r.to_pandas().values
+        print sourcefolder+"\\"+rastertype+c+".tif"
+        r =gr.from_file(sourcefolder+"\\"+rastertype+c+".tif")
+
         #print str(r.mean())
         #print r.projection
         #r.plot()
         #plt.show()
+
         r = r.clip(netherlands)[0]
-        rf = r.flatten()
+        rf = r.flatten(order='A')
+        print c +'min:{0} max:{1} avg:{2} stdd:{3}'.format(str(r.min()), str(r.max()),str(r.mean()), str(r.std()))
         #np.hist(rf)
+        #import seaborn as sns
+
+
+        #sns.set_style('darkgrid')
+        #sns_plot = sns.distplot(rf)
+        #sns_plot.savefig('cellstats/'+rastertype+c+'.png')
+        #np.
         plt.clf()
-        plt.hist(x=rf, bins=20, color='#0504aa', alpha=0.7, rwidth=0.85)
+        df = r.to_pandas().value
+        df.plot.hist(bins=20, color='#0504aa', alpha=0.7, rwidth=0.85)
+        #plt.ticklabel_format(useOffset=False, style='plain')
+        #plt.hist(x=rf, bins= 40, color='#0504aa', alpha=0.7, rwidth=0.85)
         plt.grid(axis='y', alpha=0.75)
         plt.xlabel(rastertype+c)
         plt.ylabel('Frequency')
@@ -252,7 +265,6 @@ def generateCellStats(categories, rastertype='dist2'):
         # Set a clean upper y-axis limit.
         #plt.ylim(ymax=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10)
         #plt.show()
-
         plt.savefig('cellstats/'+rastertype+c+'.png')
 
         df = r.stats(netherlands, stats='percentile_10 percentile_20 percentile_30 percentile_40 percentile_50 percentile_60 percentile_70 percentile_80 percentile_90 percentile_100')
@@ -266,7 +278,31 @@ def generateCellStats(categories, rastertype='dist2'):
     res.to_csv('cellstats/'+rastertype+'percentiles.csv')
 
 
-
+def generateCBSStats():
+    inFeatures = 'stats\\buurt_2014.shp'
+    attributes = ['BEV_DICHTH','P_65_EO_JR','P_EENP_HH', 'P_HH_Z_K','P_N_W_AL']
+    arcpy.env.overwriteOutput = True #Such that files can be overwritten
+    arcpy.env.outputCoordinateSystem = inFeatures
+    print attributes
+    #arcpy.env.workspace = r"C:\Users\schei008\Documents\github\gps\cellstats" #Setting the workspace
+    arcpy.env.extent =inFeatures
+    # Set local variables
+    for a in attributes:
+        valField = a
+        rastname = (("r"+a)[:13])+".tif"
+        outRaster = os.path.join(r"C:\Users\schei008\Documents\github\gps\cellstats",rastname)
+        assignmentType = "CELL_CENTER"
+        cellSize = 100
+        print valField
+        # Execute PolygonToRaster
+        arcpy.PolygonToRaster_conversion(inFeatures, valField, outRaster, assignmentType, "", cellSize)
+        try:
+            arcpy.RasterToOtherFormat_conversion(outRaster,arcpy.env.workspace,"TIFF")
+            #arcpy.Delete_management(outRaster)
+        except:
+            print "Raster To Other Format exsample failed."
+            print arcpy.GetMessages()
+    #return outRaster+'.tif'
 
 
 
@@ -274,6 +310,7 @@ def generateCellStats(categories, rastertype='dist2'):
 def main():
     bbgcategories = {'parks':[40,42], 'agric':[51], 'sports':[41], 'recr': [43,44], 'frst':[60], 'ntr':[61,62], 'wtr':[70,71,72,73,74,75,76,77,78,80,81,82,83], 'trfc':[11]}
     """meaning of BBG 2012 landuse categories: agric (agriculture areas), sports (sports areas) recr (recreation areas),frst (forest areas), ntr (nature areas), wtr (water areas), trfc (traffic areas)"""
+    attributes = {'BEV_DICHTH':None,'P_65_EO_JR':None,'P_EENP_HH':None, 'P_HH_Z_K':None,'P_N_W_AL':None}
     start = time.time()
     #for name,v in bbgcategories.items():
         #generatedistraster(v,name)
@@ -281,7 +318,10 @@ def main():
     #store distances to these landuse areas for points in some track
     #enrichtrack('GPS.csv',bbgcategories,'covOf')
     #enrichCBS('GPS.csv')
-    generateCellStats(bbgcategories, rastertype='covOf')
+    #generateCBSStats()
+    generateCellStats(attributes, rastertype='r', sourcefolder = 'cellstats')
+    #generateCellStats(bbgcategories, rastertype='covOf')
+
     end = time.time()
     print("Duration = "+str(end - start))
 
