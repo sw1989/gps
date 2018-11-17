@@ -228,7 +228,8 @@ def generateCellStats(categories, rastertype='dist2', sourcefolder= 'distrast'):
     #load raster data once
     rasters = []
     NDV, xsize, ysize, GeoT, Projection, DataType = gr.get_geo_info(sourcefolder+"\\"+rastertype+clist[0]+".tif")
-    netherlands = gp.read_file('Netherlands.shp')
+    netherlands = gp.read_file('Netherlands_withoutwater_s.shp')
+    netherlands_w = gp.read_file('Netherlands.shp')
     stats = []
     import matplotlib.pyplot as plt
     for c in clist:
@@ -267,7 +268,7 @@ def generateCellStats(categories, rastertype='dist2', sourcefolder= 'distrast'):
         #plt.show()
         plt.savefig('cellstats/'+rastertype+c+'.png')
 
-        df = r.stats(netherlands, stats='percentile_10 percentile_20 percentile_30 percentile_40 percentile_50 percentile_60 percentile_70 percentile_80 percentile_90 percentile_100')
+        df = r.stats(netherlands_w, stats='percentile_10 percentile_20 percentile_30 percentile_40 percentile_50 percentile_60 percentile_70 percentile_80 percentile_90 percentile_100')
         df.insert(0, 'cat', rastertype+c)
         stats.append(df)
         #print rasterstats.zonal_stats(netherlands,  r, stats="percentile_10 percentile_50 percentile_80")
@@ -319,8 +320,9 @@ def main():
     #enrichtrack('GPS.csv',bbgcategories,'covOf')
     #enrichCBS('GPS.csv')
     #generateCBSStats()
-    generateCellStats(attributes, rastertype='r', sourcefolder = 'cellstats')
+    #generateCellStats(attributes, rastertype='r', sourcefolder = 'cellstats')
     #generateCellStats(bbgcategories, rastertype='covOf')
+    generateCellStats(bbgcategories, rastertype='dist2')
 
     end = time.time()
     print("Duration = "+str(end - start))
