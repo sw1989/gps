@@ -267,7 +267,7 @@ def generateCellStats(categories, rastertype='dist2', sourcefolder= 'distrast'):
         #plt.ylim(ymax=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10)
         #plt.show()
         plt.savefig('cellstats/'+rastertype+c+'.png')
-
+        r.raster[r.raster == 0] =np.nan #This is in order to computre quantiles for non-zero values only
         df = r.stats(netherlands_w, stats='percentile_10 percentile_20 percentile_30 percentile_40 percentile_50 percentile_60 percentile_70 percentile_80 percentile_90 percentile_100')
         df.insert(0, 'cat', rastertype+c)
         stats.append(df)
@@ -320,9 +320,9 @@ def main():
     #enrichtrack('GPS.csv',bbgcategories,'covOf')
     #enrichCBS('GPS.csv')
     #generateCBSStats()
-    #generateCellStats(attributes, rastertype='r', sourcefolder = 'cellstats')
+    generateCellStats(attributes, rastertype='r', sourcefolder = 'cellstats')
     #generateCellStats(bbgcategories, rastertype='covOf')
-    generateCellStats(bbgcategories, rastertype='dist2')
+    #generateCellStats(bbgcategories, rastertype='dist2')
 
     end = time.time()
     print("Duration = "+str(end - start))
