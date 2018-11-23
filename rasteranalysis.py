@@ -26,7 +26,7 @@ import shapely
 #See https://github.com/Toblerity/Shapely
 from shapely.ops import transform
 from shapely.geometry import shape
-import rtree
+#import rtree
 import fiona
 
 
@@ -42,13 +42,16 @@ from arcpy.sa import *
 def generatedistraster(listofbbgvalues=[40,42], name="parks"):
     #0) Setting computing environment
     arcpy.env.overwriteOutput = True #Such that files can be overwritten
-    arcpy.env.workspace = r"C:\\Users\\schei008\\Documents\\GitHub\\gps\\distrast" #Setting the workspace
+    ##arcpy.env.workspace = r"C:\\Users\\schei008\\Documents\\GitHub\\gps\\distrast" #Setting the workspace
+    arcpy.env.workspace = r"C:\\Users\\simon\\Documents\\GitHub\\gps\\distrast" #Setting the workspace
+
     if arcpy.CheckExtension("Spatial") == "Available": #Check out spatial analyst extension
         arcpy.CheckOutExtension("Spatial")
     listofbbgvalues = (str(t) for t in listofbbgvalues)
     # Local variables:
 
-    BBG2012_Publicatiebestand = 'C:/Users/schei008/surfdrive/Temp/BestandBodemgebruik2012/BestandBodemgebruik2012.gdb/Publicatie/BBG2012_Publicatiebestand'
+    #BBG2012_Publicatiebestand = 'C:/Users/schei008/surfdrive/Temp/BestandBodemgebruik2012/BestandBodemgebruik2012.gdb/Publicatie/BBG2012_Publicatiebestand'
+    BBG2012_Publicatiebestand = 'C:/Users/simon/surfdrive/Temp/BestandBodemgebruik2012/BestandBodemgebruik2012.gdb/Publicatie/BBG2012_Publicatiebestand'
     arcpy.env.extent = BBG2012_Publicatiebestand
 
     # Process: Select landuse Layer By Attribute
@@ -72,11 +75,14 @@ def generatedistraster(listofbbgvalues=[40,42], name="parks"):
 """generates raster that captures the coverage of a landuse class in a neighborhood around each cell"""
 def generateCoverageRaster(name="parks"):
     arcpy.env.overwriteOutput = True #Such that files can be overwritten
-    arcpy.env.workspace = r"C:\\Users\\schei008\\Documents\\Github\\gps\\distrast" #Setting the workspace
+    #arcpy.env.workspace = r"C:\\Users\\schei008\\Documents\\Github\\gps\\distrast" #Setting the workspace
+    arcpy.env.workspace = r"C:\\Users\\simon\\Documents\\Github\\gps\\distrast" #Setting the workspace
     if arcpy.CheckExtension("Spatial") == "Available": #Check out spatial analyst extension
         arcpy.CheckOutExtension("Spatial")
-    distrast = os.path.join(r"C:\\Users\\schei008\\Documents\\Github\\gps\\distrast","dist2"+name)
-    reclrast  = os.path.join(r"C:\\Users\\schei008\\Documents\\Github\\gps\\distrast","in2"+name)
+    #distrast = os.path.join(r"C:\\Users\\schei008\\Documents\\Github\\gps\\distrast","dist2"+name)
+    distrast = os.path.join(r"C:\\Users\\simon\\Documents\\Github\\gps\\distrast","dist2"+name)
+    #reclrast  = os.path.join(r"C:\\Users\\schei008\\Documents\\Github\\gps\\distrast","in2"+name)
+    reclrast  = os.path.join(r"C:\\Users\\simon\\Documents\\Github\\gps\\distrast","in2"+name)
     covrast = os.path.join(arcpy.env.workspace,"covOf"+name)
 
     #Turns cells within landuse region into 1, and all other into 0
