@@ -30,8 +30,8 @@ import rtree
 import fiona
 
 
-#import arcpy
-#from arcpy.sa import *
+import arcpy
+from arcpy.sa import *
 
 #This module is not open source (ArcGIS), but can be left away if rasters are not generated
 
@@ -42,13 +42,13 @@ import fiona
 def generatedistraster(listofbbgvalues=[40,42], name="parks"):
     #0) Setting computing environment
     arcpy.env.overwriteOutput = True #Such that files can be overwritten
-    arcpy.env.workspace = r"C:\\Users\\simon\\Documents\\GitHub\\gps\\distrast" #Setting the workspace
+    arcpy.env.workspace = r"C:\\Users\\schei008\\Documents\\GitHub\\gps\\distrast" #Setting the workspace
     if arcpy.CheckExtension("Spatial") == "Available": #Check out spatial analyst extension
         arcpy.CheckOutExtension("Spatial")
     listofbbgvalues = (str(t) for t in listofbbgvalues)
     # Local variables:
 
-    BBG2012_Publicatiebestand = 'C:/Temp/BestandBodemgebruik2012/BestandBodemgebruik2012.gdb/Publicatie/BBG2012_Publicatiebestand'
+    BBG2012_Publicatiebestand = 'C:/Users/schei008/surfdrive/Temp/BestandBodemgebruik2012/BestandBodemgebruik2012.gdb/Publicatie/BBG2012_Publicatiebestand'
     arcpy.env.extent = BBG2012_Publicatiebestand
 
     # Process: Select landuse Layer By Attribute
@@ -312,15 +312,16 @@ def main():
     bbgcategories = {'parks':[40,42], 'agric':[51], 'sports':[41], 'recr': [43,44], 'frst':[60], 'ntr':[61,62], 'wtr':[70,71,72,73,74,75,76,77,78,80,81,82,83], 'trfc':[11]}
     """meaning of BBG 2012 landuse categories: agric (agriculture areas), sports (sports areas) recr (recreation areas),frst (forest areas), ntr (nature areas), wtr (water areas), trfc (traffic areas)"""
     attributes = {'BEV_DICHTH':None,'P_65_EO_JR':None,'P_EENP_HH':None, 'P_HH_Z_K':None,'P_N_W_AL':None}
+    bbgcategories = {'rsda': [20]} #residential areas
     start = time.time()
-    #for name,v in bbgcategories.items():
-        #generatedistraster(v,name)
-        #generateCoverageRaster(name)
+    for name,v in bbgcategories.items():
+        generatedistraster(v,name)
+        generateCoverageRaster(name)
     #store distances to these landuse areas for points in some track
     #enrichtrack('GPS.csv',bbgcategories,'covOf')
     #enrichCBS('GPS.csv')
     #generateCBSStats()
-    generateCellStats(attributes, rastertype='r', sourcefolder = 'cellstats')
+    #generateCellStats(attributes, rastertype='r', sourcefolder = 'cellstats')
     #generateCellStats(bbgcategories, rastertype='covOf')
     #generateCellStats(bbgcategories, rastertype='dist2')
 
