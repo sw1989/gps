@@ -157,7 +157,7 @@ def enrichtrack(csvf, categories, rastertype='dist2'):
                     else:
                         print("Coordinates out of bounds!")
                         valuelist.append(str('NN'))
-                    writer.writerow([line[0], line[1]]+valuelist)
+                writer.writerow([line[0], line[1]]+valuelist)
                 #if i ==20:
                 #    break
     csvfile.close()
@@ -319,7 +319,7 @@ def main():
     bbgcategories = {'rsda': [20],'parks':[40,42], 'agric':[51], 'sports':[41], 'recr': [43,44], 'frst':[60], 'ntr':[61,62], 'wtr':[70,71,72,73,74,75,76,77,78,80,81,82,83], 'trfc':[11]}
     """meaning of BBG 2012 landuse categories: rsda (residential areas), agric (agriculture areas), sports (sports areas) recr (recreation areas),frst (forest areas), ntr (nature areas), wtr (water areas), trfc (traffic areas)"""
     attributes = {'BEV_DICHTH':None,'P_65_EO_JR':None,'P_EENP_HH':None, 'P_HH_Z_K':None,'P_N_W_AL':None}
-    bbgcategories = {'rsda': [20]} #residential areas
+    #bbgcategories = {'rsda': [20]} #residential areas
     start = time.time()
     #for name,v in bbgcategories.items():
     #    generatedistraster(v,name)
