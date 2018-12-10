@@ -318,14 +318,14 @@ def generateCBSStats():
 
 
 def main():
-    bbgcategories = {'rsda': [20],'parks':[40,42], 'agric':[51], 'sports':[41], 'recr': [43,44], 'frst':[60], 'ntr':[61,62], 'wtr':[70,71,72,73,74,75,76,77,78,80,81,82,83], 'trfc':[11]}
+    #bbgcategories = {'rsda': [20],'parks':[40,42], 'agric':[51], 'sports':[41], 'recr': [43,44], 'frst':[60], 'ntr':[61,62], 'wtr':[70,71,72,73,74,75,76,77,78,80,81,82,83], 'trfc':[11]}
     """meaning of BBG 2012 landuse categories: rsda (residential areas), agric (agriculture areas), sports (sports areas) recr (recreation areas),frst (forest areas), ntr (nature areas), wtr (water areas), trfc (traffic areas)"""
     attributes = {'BEV_DICHTH':None,'P_65_EO_JR':None,'P_EENP_HH':None, 'P_HH_Z_K':None,'P_N_W_AL':None}
-    #bbgcategories = {'rsda': [20]} #residential areas
+    bbgcategories = {'office': [24]} #residential areas
     start = time.time()
-    #for name,v in bbgcategories.items():
-    #    generatedistraster(v,name)
-    #    generateCoverageRaster(name)
+    for name,v in bbgcategories.items():
+        generatedistraster(v,name)
+        generateCoverageRaster(name)
     #store distances to these landuse areas for points in some track
     file = r"C:\Users\schei008\surfdrive\Temp\graphical-sample.csv"
     enrichtrack(file,bbgcategories,'dist2')
