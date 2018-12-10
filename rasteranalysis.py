@@ -141,25 +141,26 @@ def enrichtrack(csvf, categories, rastertype='dist2'):
     for c in clist:
         rasters.append(gr.from_file("distrast\\"+rastertype+c+".tif"))
     with open(csvf, 'rb') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',', quotechar='|')
-        with open(csvf.split('.')[0]+'en.csv', 'wb') as out:
-            writer = csv.writer(out, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        reader = csv.reader(csvfile, delimiter=';', quotechar='|')
+        with open(csvf.split('.')[0]+rastertype+'en.csv', 'wb') as out:
+            writer = csv.writer(out, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             writer.writerow(['Y', 'X']+clist)
             for i,line in enumerate(reader):
-                x = float(line[1])
-                y = float(line[0])
-                valuelist =[]
-                #row, col = lookupWGS84(x, y, GeoT)
-                for data in rasters:
-                    value = lookupWGS84(x, y, data)
-                    if value != 'NN': #and (row < rows and col < cols):
-                        valuelist.append(str(value))
-                    else:
-                        print("Coordinates out of bounds!")
-                        valuelist.append(str('NN'))
-                writer.writerow([line[0], line[1]]+valuelist)
-                #if i ==20:
-                #    break
+                if i >0:
+                    x = float(line[1])
+                    y = float(line[0])
+                    valuelist =[]
+                    #row, col = lookupWGS84(x, y, GeoT)
+                    for data in rasters:
+                        value = lookupWGS84(x, y, data)
+                        if value != 'NN': #and (row < rows and col < cols):
+                            valuelist.append(str(value))
+                        else:
+                            print("Coordinates out of bounds!")
+                            valuelist.append(str('NN'))
+                    writer.writerow([line[0], line[1]]+valuelist)
+                    #if i ==20:
+                    #    break
     csvfile.close()
     out.close()
 
@@ -206,23 +207,24 @@ def enrichCBS(csvf):
             layer2_index = generate_index(datasrc2, fname)
 
         with open(csvf, 'rb') as csvfile:
-            reader = csv.reader(csvfile, delimiter=',', quotechar='|')
-            with open(csvf.split('.')[0]+'en.csv', 'wb') as out:
-                writer = csv.writer(out, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            reader = csv.reader(csvfile, delimiter=';', quotechar='|')
+            with open(csvf.split('.')[0]+'CBSen.csv', 'wb') as out:
+                writer = csv.writer(out, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
                 writer.writerow(['Y', 'X']+attributes)
                 for i,line in enumerate(reader):
-                    x = float(line[1])
-                    y = float(line[0])
-                    feat = selectPolygonData(x, y, layer2_index, datasrc2)
-                    if feat != None:
-                        attr = feat['properties']
-                        #print("row: "+line[0]+" "+ line[1]+" "+str(attr['BEV_DICHTH']) )
-                        writer.writerow([line[0], line[1]]+[str(attr[a]) for a in attributes])
-                    else:
-                        print("Coordinates out of bounds!")
-                        writer.writerow([line[0], line[1]]+['NN' for i in attributes])
-                    #if i ==5:
-                    #    break
+                    if i >0:
+                        x = float(line[1])
+                        y = float(line[0])
+                        feat = selectPolygonData(x, y, layer2_index, datasrc2)
+                        if feat != None:
+                            attr = feat['properties']
+                            #print("row: "+line[0]+" "+ line[1]+" "+str(attr['BEV_DICHTH']) )
+                            writer.writerow([line[0], line[1]]+[str(attr[a]) for a in attributes])
+                        else:
+                            print("Coordinates out of bounds!")
+                            writer.writerow([line[0], line[1]]+['NN' for i in attributes])
+                        #if i ==5:
+                        #    break
         csvfile.close()
     datasrc2.close()
 
@@ -325,8 +327,10 @@ def main():
     #    generatedistraster(v,name)
     #    generateCoverageRaster(name)
     #store distances to these landuse areas for points in some track
-    enrichtrack('GPS.csv',bbgcategories,'dist2')
-    #enrichCBS('GPS.csv')
+    file = r"C:\Users\schei008\surfdrive\Temp\graphical-sample.csv"
+    enrichtrack(file,bbgcategories,'dist2')
+    enrichtrack(file,bbgcategories,'covOf')
+    enrichCBS(file)
     #generateCBSStats()
     #generateCellStats(attributes, rastertype='r', sourcefolder = 'cellstats')
     #generateCellStats(bbgcategories, rastertype='covOf')
