@@ -18,12 +18,15 @@
     </Histograms>
     <Metadata>
       <MDI key="SourceBandIndex">0</MDI>
+<<<<<<< HEAD
       <MDI key="STATISTICS_MAXIMUM">117623.296875</MDI>
       <MDI key="STATISTICS_MEAN">18787.492526811</MDI>
       <MDI key="STATISTICS_MINIMUM">0</MDI>
       <MDI key="STATISTICS_SKIPFACTORX">1</MDI>
       <MDI key="STATISTICS_SKIPFACTORY">1</MDI>
       <MDI key="STATISTICS_STDDEV">24138.176224243</MDI>
+=======
+>>>>>>> origin/master
     </Metadata>
   </PAMRasterBand>
 </PAMDataset>
