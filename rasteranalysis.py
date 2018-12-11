@@ -30,8 +30,8 @@ import rtree
 import fiona
 
 
-#import arcpy
-#from arcpy.sa import *
+import arcpy
+from arcpy.sa import *
 
 #This module is not open source (ArcGIS), but can be left away if rasters are not generated
 
@@ -251,7 +251,7 @@ def generateCellStats(categories, rastertype='dist2', sourcefolder= 'distrast'):
         #plt.show()
 
         r = r.clip(netherlands)[0]
-        rf = r.flatten(order='A')
+        #rf = r.flatten(order='A')
         print c +'min:{0} max:{1} avg:{2} stdd:{3}'.format(str(r.min()), str(r.max()),str(r.mean()), str(r.std()))
         #np.hist(rf)
         #import seaborn as sns
@@ -294,13 +294,13 @@ def generateCBSStats():
     arcpy.env.overwriteOutput = True #Such that files can be overwritten
     arcpy.env.outputCoordinateSystem = inFeatures
     print attributes
-    #arcpy.env.workspace = r"C:\Users\schei008\Documents\github\gps\cellstats" #Setting the workspace
+    arcpy.env.workspace = r"C:\Users\simon\Documents\github\gps\cellstats" #Setting the workspace
     arcpy.env.extent =inFeatures
     # Set local variables
     for a in attributes:
         valField = a
         rastname = (("r"+a)[:13])+".tif"
-        outRaster = os.path.join(r"C:\Users\schei008\Documents\github\gps\cellstats",rastname)
+        outRaster = os.path.join(r"C:\Users\simon\Documents\github\gps\cellstats",rastname)
         assignmentType = "CELL_CENTER"
         cellSize = 100
         print valField
@@ -318,23 +318,23 @@ def generateCBSStats():
 
 
 def main():
-    #bbgcategories = {'rsda': [20],'parks':[40,42], 'agric':[51], 'sports':[41], 'recr': [43,44], 'frst':[60], 'ntr':[61,62], 'wtr':[70,71,72,73,74,75,76,77,78,80,81,82,83], 'trfc':[11]}
+    bbgcategories = {'office': [24], 'rsda': [20],'parks':[40,42], 'agric':[51], 'sports':[41], 'recr': [43,44], 'frst':[60], 'ntr':[61,62], 'wtr':[70,71,72,73,74,75,76,77,78,80,81,82,83], 'trfc':[11]}
     """meaning of BBG 2012 landuse categories: rsda (residential areas), agric (agriculture areas), sports (sports areas) recr (recreation areas),frst (forest areas), ntr (nature areas), wtr (water areas), trfc (traffic areas)"""
     attributes = {'BEV_DICHTH':None,'P_65_EO_JR':None,'P_EENP_HH':None, 'P_HH_Z_K':None,'P_N_W_AL':None}
-    bbgcategories = {'office': [24]} #residential areas
+    #bbgcategories = {'office': [24]} #residential areas
     start = time.time()
-    for name,v in bbgcategories.items():
-        generatedistraster(v,name)
-        generateCoverageRaster(name)
+    #for name,v in bbgcategories.items():
+    #    generatedistraster(v,name)
+    #    generateCoverageRaster(name)
     #store distances to these landuse areas for points in some track
-    file = r"C:\Users\schei008\surfdrive\Temp\graphical-sample.csv"
-    enrichtrack(file,bbgcategories,'dist2')
-    enrichtrack(file,bbgcategories,'covOf')
-    enrichCBS(file)
+    #file = r"C:/Users/simon/surfdrive/Temp/graphical-sample.csv"
+    #enrichtrack(file,bbgcategories,'dist2')
+    #enrichtrack(file,bbgcategories,'covOf')
+    #enrichCBS(file)
     #generateCBSStats()
     #generateCellStats(attributes, rastertype='r', sourcefolder = 'cellstats')
-    #generateCellStats(bbgcategories, rastertype='covOf')
-    #generateCellStats(bbgcategories, rastertype='dist2')
+    generateCellStats(bbgcategories, rastertype='covOf')
+    generateCellStats(bbgcategories, rastertype='dist2')
 
     end = time.time()
     print("Duration = "+str(end - start))
