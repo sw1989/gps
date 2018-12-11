@@ -30,8 +30,8 @@ import rtree
 import fiona
 
 
-import arcpy
-from arcpy.sa import *
+#import arcpy
+#from arcpy.sa import *
 
 #This module is not open source (ArcGIS), but can be left away if rasters are not generated
 
@@ -327,14 +327,14 @@ def main():
     #    generatedistraster(v,name)
     #    generateCoverageRaster(name)
     #store distances to these landuse areas for points in some track
-    #file = r"C:/Users/simon/surfdrive/Temp/graphical-sample.csv"
-    #enrichtrack(file,bbgcategories,'dist2')
-    #enrichtrack(file,bbgcategories,'covOf')
-    #enrichCBS(file)
+    file = r"C:/Users/schei008/surfdrive/Temp/graphical-sample.csv"
+    enrichtrack(file,bbgcategories,'dist2')
+    enrichtrack(file,bbgcategories,'covOf')
+    enrichCBS(file)
     #generateCBSStats()
     #generateCellStats(attributes, rastertype='r', sourcefolder = 'cellstats')
-    generateCellStats(bbgcategories, rastertype='covOf')
-    generateCellStats(bbgcategories, rastertype='dist2')
+    #generateCellStats(bbgcategories, rastertype='covOf')
+    #generateCellStats(bbgcategories, rastertype='dist2')
 
     end = time.time()
     print("Duration = "+str(end - start))
